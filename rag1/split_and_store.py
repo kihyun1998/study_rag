@@ -19,6 +19,7 @@ DATA_PATH="data/Demian.pdf"
 
 
 def load_pdf(pdf_path:str,start_page: int=0,top_margin=0.0,bottom_margin=0.0):
+    print("load_pdf 작업중..")
     start_time =time.time()
     # 로더 정의
     loader = PDFPlumberLoader(file_path=pdf_path)
@@ -90,7 +91,7 @@ def main():
 def generate_data_store():
     print("시작")
     # 파일 로드
-    datas=load_pdf(pdf_path=DATA_PATH)
+    datas=load_pdf(pdf_path=DATA_PATH,top_margin=50,bottom_margin=50)
 
     # 텍스트 분활
     chunks = make_chunks(documents=datas)
