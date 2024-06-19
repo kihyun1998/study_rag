@@ -4,6 +4,7 @@ from langchain.storage import LocalFileStore
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma 
 from langchain.embeddings import CacheBackedEmbeddings
+from langchain.schema import Document
 import openai
 import os
 import time
@@ -16,32 +17,39 @@ openai.api_key=os.environ['OPENAI_API_KEY']
 CHROMA_PATH="chroma"
 DATA_PATH="data/Demian.pdf"
 
-# pdf 문서 로딩 함수
-# 페이지 번호가 담긴 text를 반환한다.
-def load_documents(pdf_path:str, start_page: int=0,crob_height=None):
+
+def load_pdf(pdf_path:str,start_page: int=0,top_margin=0.0,bottom_margin=0.0):
     start_time =time.time()
-    text=""
+    # 로더 정의
+    loader = PDFPlumberLoader(file_path=pdf_path)
+    # 파일 읽기
+    data = loader.load()
+
+
     with pdfplumber.open(pdf_path) as pdf:
-        for i ,page in enumerate(pdf.pages):
+        for i,page in enumerate(pdf.pages):
             # Get the dimensions of the page
             width = page.width
             height = page.height
-            
             if i>=start_page:
-                if crob_height:
-                    crob_box = (0,0,width,height-crob_height)
-                    cropped_page = page.within_bbox(crob_box)
-                    page_text = cropped_page.extract_text()+f"\n[Page {cropped_page.page_number}]\n"
-                else:
-                    page_text = page.extract_text()+f"\n[Page {cropped_page.page_number}]\n"
-                text += page_text
+                crob_box = (0,top_margin,width,height-bottom_margin)
+                cropped_page = page.within_bbox(crob_box)
+                page_text= cropped_page.extract_text()
+                data[i].page_content = page_text
+  
     end_time = time.time()
     duration_time=end_time-start_time
-    print(f"Load text completed.\n[Duration of Time]: {duration_time:.2f} s")
-    return text
+    print(f"load_pdf completed.\n[Duration of Time]: {duration_time:.2f} s")
+    
+    # 정의한 시작 페이지 부터 자르기
+    data = data[start_page:]
+    
+    return data
+  
 
 # text 분할 함수
-def make_chunk(text: str):
+def make_chunks(documents: list[Document]):
+    print("make_chunks 작업중..")
     start_time =time.time()
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
@@ -49,7 +57,7 @@ def make_chunk(text: str):
         length_function=len,
         add_start_index=True
     )
-    chunks = text_splitter.split_text(text=text)
+    chunks = text_splitter.split_documents(documents=documents)
     end_time = time.time()
     duration_time=end_time-start_time
     print(f"Text Split to {len(chunks)} chunks.\n[Duration of Time]: {duration_time:.2f} s")
@@ -57,7 +65,9 @@ def make_chunk(text: str):
     return chunks
 
 # chromadb에 저장
-def save_to_db(chunks: list[str]):
+def save_to_db(chunks: list[Document]):
+    print("save_to_db 작업중..")
+    start_time =time.time()
     embeddings = OpenAIEmbeddings()
 
     store = LocalFileStore("./cache/")
@@ -67,9 +77,8 @@ def save_to_db(chunks: list[str]):
         namespace=embeddings.model,
     )
 
-    start_time =time.time()
     # Create a new DB from the documents
-    db = Chroma.from_texts(texts=chunks, embedding=cached_embedder, persist_directory=CHROMA_PATH)
+    db = Chroma.from_documents(documents=chunks, embedding=cached_embedder, persist_directory=CHROMA_PATH)
     end_time = time.time()
     duration_time=end_time-start_time
     print(f"Created and saved {len(chunks)} chunks to {CHROMA_PATH}.\n[Duration of Time]: {duration_time:.2f} s")
@@ -81,9 +90,11 @@ def main():
 def generate_data_store():
     print("시작")
     # 파일 로드
-    documents=load_documents(pdf_path=DATA_PATH,crob_height=50)
+    datas=load_pdf(pdf_path=DATA_PATH)
+
     # 텍스트 분활
-    chunks = make_chunk(documents)
+    chunks = make_chunks(documents=datas)
+
     # chromadb에 저장
     save_to_db(chunks=chunks)
 
