@@ -37,7 +37,7 @@ def main():
     db = Chroma(embedding_function=cached_embedder,persist_directory=CHROMA_PATH)
 
     # 검색기 생성
-    retriever = db.as_retriever()
+    retriever = db.as_retriever(search_kwargs={"k": 1})
 
     # 프롬프트 가져오기
     prompt = hub.pull("rlm/rag-prompt")
