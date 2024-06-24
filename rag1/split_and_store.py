@@ -69,7 +69,7 @@ def make_chunks(documents: list[Document]):
 def save_to_db(chunks: list[Document]):
     print("save_to_db 작업중..")
     start_time =time.time()
-    embeddings = OpenAIEmbeddings()
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
     store = LocalFileStore("./cache/")
     cached_embedder = CacheBackedEmbeddings.from_bytes_store(

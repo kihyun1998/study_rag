@@ -1,0 +1,22 @@
+{
+  "dependencies": {
+    "@langchain/community": "^0.2.13",
+    "@langchain/openai": "^0.2.0",
+    "pdf-parse": "^1.1.1",
+    "voy-search": "^0.6.2"
+  },
+  "name": "rag_use_js1",
+  "version": "1.0.0",
+  "devDependencies": {
+    "webpack": "^5.92.1",
+    "webpack-cli": "^5.1.4"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "type": "module"
+}
