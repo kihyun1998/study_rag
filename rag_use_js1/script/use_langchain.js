@@ -28,10 +28,6 @@ const loadAndSplitPDF = async (filePath) => {
     const splitDocs = splitter.splitDocuments(docs);
     console.log(splitDocs);
     // // Instantiate the OpenAIEmbeddings
-    // const embeddings = new OpenAIEmbeddings({
-    //   apiKey: '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', // Replace with your OpenAI API key
-    // });
-
     // // Prepare documents with embeddings for storage
     // const documentsWithEmbeddings = await Promise.all(splitDocs.map(async (doc) => {
     //   const content = doc.content || ''; // Get the content of the split document
